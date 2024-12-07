@@ -1,125 +1,122 @@
+import pickle as pkl
 import tkinter as tk
-from cProfile import label
-from tkinter import ttk, Button
-import pickle
-from tkinter import messagebox
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.neighbors import KNeighborsClassifier
+
 from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
+from tkinter import Button, ttk
+from tkinter import messagebox
 
-with open('decision_tree_classifier.pkl', 'rb') as f:
-    decision_tree_classifier = pickle.load(f)
+with open('./saved_models/decision_tree_classifier.pkl', 'rb') as file:
+  decision_tree_classifier = pkl.load(file)
 
-with open('k_neighbors_classifier.pkl', 'rb') as f:
-        k_neighbors_classifier = pickle.load(f)
+with open('./saved_models/k_neighbors_classifier.pkl', 'rb') as file:
+  k_neighbors_classifier = pkl.load(file)
 
-with open("logistic_regression.pkl", 'rb') as f:
-        logistic_regression = pickle.load(f)
+with open('./saved_models/logistic_regression.pkl', 'rb') as file:
+  logistic_regression = pkl.load(file)
 
-with open("svm_classifier.pkl", 'rb') as f:
-    svm_classifier = pickle.load(f)
+with open('./saved_models/svm_classifier.pkl', 'rb') as file:
+  svm_classifier = pkl.load(file)
 
+with open('./saved_models/encoder.pkl', 'rb') as file:
+  encoder = pkl.load(file)
 
-def validate_number(min, max):
-    try:
+def validate_number():
+  try:
+    number = int(community_area_box.get())
 
-        number = int(spinbox.get())
+    if number < 1 or number > 77:
+      messagebox.showerror('Invalid Input!', 'Please enter a number between 1 and 77.')
 
-        if number < min or number > max:
-            messagebox.showerror("Invalid Input", "Please enter a number between 1 and 10.")
-            spinbox.delete(0, tk.END)
-            spinbox.insert(0, "0")
+      community_area_box.delete(0, tk.END)
+      community_area_box.insert(0, '0')
+  except ValueError:
+    messagebox.showerror('Invalid Input!', 'Please enter a valid number.')
 
-    except ValueError:
+    community_area_box.delete(0, tk.END) # Clear the invalid input
+    community_area_box.insert(0, '0')
 
-        messagebox.showerror("Invalid Input", "Please enter a valid number.")
-        spinbox.delete(0, tk.END)  # Clear the invalid input
-        spinbox.insert(0, "0")
+def show_prediction():
+  validate_number
 
-def show_model():
-    validate_number(0, 77)
-    primaryType = PrimaryType_box.get()
-    locationDescription = LocationDescription_box.get()
-    spinbox_value = int(spinbox.get())
-    modelType = Model_box.get()
+  primary_type = primary_type_box.get()
+  location_description = location_description_box.get()
+  community_area = int(community_area_box.get())
+  model_type = model_type_box.get()
 
-    prediction_input = [[primaryType, float(spinbox_value) ,locationDescription]]
+  prediction_input = [primary_type, location_description, community_area]
 
-    match modelType:
-        case "decision tree":
-            #t.insert(tk.END, f"{decision_tree_classifier.predict(prediction_input)}\n")
-            #t.insert(tk.END,f"{decision_tree_classifier.predict_prob(prediction_input)}")
-            t.insert(tk.END, "decision tree\n")
-        case "k-neighbors":
-            t.insert(tk.END,f"{k_neighbors_classifier.predict(prediction_input)}\n")
-            t.insert(tk.END, f"{k_neighbors_classifier.predict_prob(prediction_input)}")
-        case "logistic regression":
-            t.insert(tk.END,f"{logistic_regression.predict(prediction_input)}")
-            t.insert(tk.END, f"{logistic_regression.predict_prob(prediction_input)}")
-        case "svm":
-            t.insert(tk.END, f"{svm_classifier.predict(prediction_input)}\n")
-            t.insert(tk.END, f"{svm_classifier.predict_prob(prediction_input)}")
+  match model_type:
+    case 'decision tree':
+      prediction_text.insert(tk.END, f'{decision_tree_classifier.predict(prediction_input)}\n')
+      prediction_text.insert(tk.END, f'{decision_tree_classifier.predict_prob(prediction_input)}')
+      prediction_text.insert(tk.END, 'decision tree\n')
+    case 'k-neighbors':
+      prediction_text.insert(tk.END, f'{k_neighbors_classifier.predict(prediction_input)}\n')
+      prediction_text.insert(tk.END, f'{k_neighbors_classifier.predict_prob(prediction_input)}')
+    case 'logistic regression':
+      prediction_text.insert(tk.END, f'{logistic_regression.predict(prediction_input)}')
+      prediction_text.insert(tk.END, f'{logistic_regression.predict_prob(prediction_input)}')
+    case 'svm':
+      prediction_text.insert(tk.END, f'{svm_classifier.predict(prediction_input)}\n')
+      prediction_text.insert(tk.END, f'{svm_classifier.predict_prob(prediction_input)}')
 
 
 root = tk.Tk()
-root.title("Crime Rate in Chicago")
-root.geometry("600x600")
+root.geometry('600x600')
+root.title('Crime Rate in Chicago')
 
-p_typeFrame= tk.Frame(root)
-p_typeFrame.pack(pady=10, padx=10, fill="x")
+primary_type_frame = tk.Frame(root)
+primary_type_frame.pack(pady=10, padx=10, fill='x')
 
-PrimaryType_label = tk.Label(p_typeFrame, text="Primary Type:", font=("Arial", 14))
-PrimaryType_label.pack(side = tk.LEFT,pady=(10, 5), anchor="w")
+primary_type_label = tk.Label(primary_type_frame, text='Primary Type:', font=('Arial', 14))
+primary_type_label.pack(side=tk.LEFT, pady=(10, 5), anchor='w')
 
-PrimaryType_box = ttk.Combobox(p_typeFrame, values=["Option 1", "Option 2", "Option 3"], font=("Arial", 12), width= 20)
-PrimaryType_box.pack(side = tk.LEFT, pady=5, padx=10)
+primary_type_box = ttk.Combobox(primary_type_frame, values=["Option 1", "Option 2", "Option 3"], font=('Arial', 12), width=20)
+primary_type_box.pack(side=tk.LEFT, pady=5, padx=10)
 
+location_description_frame = tk.Frame(root)
+location_description_frame.pack(pady=10, padx=10, fill='x')
 
-description_Frame= tk.Frame(root)
-description_Frame.pack(pady=10, padx=10, fill="x")
+location_description_label = tk.Label(location_description_frame, text='Location Description:', font=('Arial', 14))
+location_description_label.pack(side=tk.LEFT, pady=(10, 5), anchor='w')
 
-LocationDescription_label = tk.Label(description_Frame, text="Location Description:", font=("Arial", 14))
-LocationDescription_label.pack(side = tk.LEFT, pady=(10, 5), anchor="w")
+location_description_box = ttk.Combobox(location_description_frame, values=["Option 1", "Option 2", "Option 3"], font=('Arial', 12), width=20)
+location_description_box.pack(side=tk.LEFT, pady=5, padx=10)
 
-LocationDescription_box = ttk.Combobox(description_Frame, values=["Option 1", "Option 2", "Option 3"], font=("Arial", 12), width= 20)
-LocationDescription_box.pack(side = tk.LEFT, pady=5, padx=10)
+community_area_frame = tk.Frame(root)
+community_area_frame.pack(pady=10, padx=10, fill='x')
 
-spin_frame = tk.Frame(root)
-spin_frame.pack(pady=10, padx=10, fill="x")
+community_area_label = tk.Label(community_area_frame, text='Community Area:', font=('Arial', 14))
+community_area_label.pack(side=tk.LEFT, padx=(0, 2))
 
-label_spinbox = tk.Label(spin_frame, text="Enter Number: ", font=("Arial", 14))
-label_spinbox.pack(side = tk.LEFT ,padx=(0, 2))
+community_area_box = tk.Spinbox(community_area_frame, from_=1, to=77, font=('Arial', 12), validate='key')
+community_area_box.pack(side=tk.LEFT, pady=10)
 
-spinbox = tk.Spinbox(spin_frame, from_=0, to=77, font=("Arial", 12), validate="key")
-spinbox.pack(side = tk.LEFT ,pady=10)
+model_type_frame = tk.Frame(root)
+model_type_frame.pack(pady=10, padx=10, fill='x')
 
-model_frame = tk.Frame(root)
-model_frame.pack(pady=10, padx=10, fill="x")
-Model_label = tk.Label(model_frame, text="Model:", font=("Arial", 14))
-Model_label.pack(side = tk.LEFT, pady=(10, 5), anchor="w")
+model_label = tk.Label(model_type_frame, text='Model:', font=('Arial', 14))
+model_label.pack(side=tk.LEFT, pady=(10, 5), anchor='w')
 
-Model_box = ttk.Combobox(model_frame, values=["decision tree", "k-neighbors", "logistic regression", "svm"], font=("Arial", 12) , width= 20)
-Model_box.pack(side = tk.LEFT, pady=5, padx=10)
+model_type_box = ttk.Combobox(model_type_frame, values=['Logistic Regression', 'K-Nearest Neighbors', 'Decision Tree', 'Support Vector Machine'], font=('Arial', 12), width=20)
+model_type_box.pack(side=tk.LEFT, pady=5, padx=10)
 
-show_info = Button(root, text="OK", font=("Arial", 12), command=show_model, width= 8)
-show_info.pack(pady=5, padx=10)
+button = Button(root, text='OK', font=('Arial', 12), command=show_prediction, width=8)
+button.pack(pady=5, padx=10)
 
+prediction_frame = tk.Frame(root)
+prediction_frame.pack(padx=10, pady=10)
 
+prediction_text = tk.Text(prediction_frame, height=50, width=50)
+prediction_text.pack(side=tk.LEFT)
 
-frame = tk.Frame(root)
-frame.pack(padx=10, pady=10)
-
-
-t = tk.Text(frame, height=50, width=50)
-t.pack(side=tk.LEFT)
-
-
-scrollbar = tk.Scrollbar(frame, orient=tk.VERTICAL, command=t.yview)
+scrollbar = tk.Scrollbar(prediction_frame, orient=tk.VERTICAL, command=prediction_text.yview)
 scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-
-t.config(yscrollcommand=scrollbar.set)
-
+prediction_text.config(yscrollcommand=scrollbar.set)
 
 root.mainloop()
