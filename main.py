@@ -6,19 +6,20 @@ import tkinter as tk
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 from tkinter import Button, ttk
 from tkinter import messagebox
 
-df = pd.read_csv('crime_prediction_in_chicago_dataset.csv',
-                 usecols=['Primary Type', 'Location Description']).dropna()
+df = pd.read_csv('crime_prediction_in_chicago_dataset.csv', usecols=['Primary Type', 'Location Description']).dropna()
 
 MODEL_TYPE_VALUES = ['Logistic Regression', 'K-Nearest Neighbors', 'Decision Tree', 'Support Vector Machine']
 
 PRIMARY_TYPE_VALUES = df['Primary Type'].unique().tolist()
 
 LOCATION_DESCRIPTION_VALUES = df['Location Description'].unique().tolist()
+
+del df
 
 with open('./saved_models/decision_tree_classifier.pkl', 'rb') as file:
   decision_tree_classifier = pkl.load(file)
@@ -71,22 +72,39 @@ def show_prediction():
 
   if not validate_input(primary_type, location_description, community_area, model_type): return
 
-  prediction_input = [primary_type, location_description, community_area]
+  features = pd.DataFrame({'Primary Type': [primary_type], 'Location Description': [location_description], 'Community Area': [community_area]})
+
+  features = pd.DataFrame(encoder.transform(features), columns=encoder.get_feature_names_out())
 
   match model_type:
-    case 'decision tree':
-      prediction_text.insert(tk.END, f'{decision_tree_classifier.predict(prediction_input)}\n')
-      prediction_text.insert(tk.END, f'{decision_tree_classifier.predict_prob(prediction_input)}')
-      prediction_text.insert(tk.END, 'decision tree\n')
-    case 'k-neighbors':
-      prediction_text.insert(tk.END, f'{k_neighbors_classifier.predict(prediction_input)}\n')
-      prediction_text.insert(tk.END, f'{k_neighbors_classifier.predict_prob(prediction_input)}')
-    case 'logistic regression':
-      prediction_text.insert(tk.END, f'{logistic_regression.predict(prediction_input)}')
-      prediction_text.insert(tk.END, f'{logistic_regression.predict_prob(prediction_input)}')
-    case 'svm':
-      prediction_text.insert(tk.END, f'{svm_classifier.predict(prediction_input)}\n')
-      prediction_text.insert(tk.END, f'{svm_classifier.predict_prob(prediction_input)}')
+    case 'Logistic Regression':
+      prediction = logistic_regression.predict(features)[0]
+      prediction_probabilty = logistic_regression.predict_proba(features)[0]
+
+      prediction_text.insert(tk.END, 'Logistic Regression:-\n')
+      prediction_text.insert(tk.END, f'Classification: {'Arrested' if prediction else 'Not Arrested'}\n')
+      prediction_text.insert(tk.END, f'Confidence: {prediction_probabilty[1] if prediction else prediction_probabilty[0]}\n\n')
+    case 'K-Nearest Neighbors':
+      prediction = k_neighbors_classifier.predict(features)[0]
+      prediction_probabilty = k_neighbors_classifier.predict_proba(features)[0]
+
+      prediction_text.insert(tk.END, 'K-Nearest Neighbors:-\n')
+      prediction_text.insert(tk.END, f'Classification: {'Arrested' if prediction else 'Not Arrested'}\n')
+      prediction_text.insert(tk.END, f'Confidence: {prediction_probabilty[1] if prediction else prediction_probabilty[0]}\n\n')
+    case 'Decision Tree':
+      prediction = decision_tree_classifier.predict(features)[0]
+      prediction_probabilty = decision_tree_classifier.predict_proba(features)[0]
+
+      prediction_text.insert(tk.END, 'Decision Tree:-\n')
+      prediction_text.insert(tk.END, f'Classification: {'Arrested' if prediction else 'Not Arrested'}\n')
+      prediction_text.insert(tk.END, f'Confidence: {prediction_probabilty[1] if prediction else prediction_probabilty[0]}\n\n')
+    case 'Support Vector Machine':
+      prediction = svm_classifier.predict(features)[0]
+      prediction_probabilty = svm_classifier.decision_function(features)[0]
+
+      prediction_text.insert(tk.END, 'Support Vector Machine:-\n')
+      prediction_text.insert(tk.END, f'Classification: {'Arrested' if prediction else 'Not Arrested'}\n')
+      prediction_text.insert(tk.END, f'Confidence: {abs(prediction_probabilty)}\n\n')
 
 root = tk.Tk()
 root.geometry('600x600')
